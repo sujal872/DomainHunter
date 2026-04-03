@@ -1,6 +1,10 @@
 from utils import banner
 import socket
 import whois
+import pydnsbl
+from datetime import datetime
+
+domain_checker = pydnsbl.DNSBLDomainChecker()
 
 def clean_date(date):
     if isinstance(date, list):
@@ -53,10 +57,21 @@ def reverse_lookup():
         exit()
 
 
+def DNS_blacklist_cheaker():
+    result = domain_checker.check('google.com')
+
+    if result.blacklisted:
+        print(f"Domain is BLACKLISTED on {len(result.detected_by)} lists.")
+        print(f"Detected by: {result.detected_by}")
+    else:
+        print("Domain is clean.")
+
+
 def main():
     while True:
         print('\n\n1. Domain lookup')
         print('2. Reverse lookup')
+        print('3. Domain Blacklist')
         print('6. Exit')
         choice = int(input("Choose : "))
 
@@ -64,6 +79,8 @@ def main():
             domain_lookup()
         elif choice == 2:
             reverse_lookup()  
+        elif choice == 3:
+            DNS_blacklist_cheaker() 
         elif choice == 6:
             break    
         else:
