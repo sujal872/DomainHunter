@@ -53,6 +53,3 @@ def banner():
     type_text("🛡️ Loading security checks...")
     type_text("⚡ Author: Sujal Karnwal")
     type_text("💀 Ready to Hunt...\n")
-
-
-banner()

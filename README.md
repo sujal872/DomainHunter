@@ -1,9 +1,11 @@
 ![Domain Hunter Banner](assets/DomainHunter.png)
+
 # 🔍 DomainHunter
 
 > Hunt Domains. Extract Intelligence. Stay Ahead.
 
-A powerful **CLI-based reconnaissance tool** built with Python for gathering domain intelligence and security insights.
+DomainHunter is a powerful **CLI-based reconnaissance tool** built with Python for gathering domain intelligence and security insights.
+That extracts public information such as DNS records, WHOIS data, IP details, and more. Built for cybersecurity enthusiasts, bug bounty hunters, and learners.
 
 
 ---
