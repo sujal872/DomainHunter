@@ -1,101 +1,117 @@
 from utils import banner
 import socket
-import whois
+from datetime import datetime, UTC
 import pydnsbl
-from datetime import datetime
+from core.dns_whois import domain_lookup ,domain_who_is
+from core.dns_blacklist_info import DNS_blacklist_checker
+from core.ssl_info import get_ssl_info
+from core.reverse_info import reverse_lookup
+from core.report import report_generator , report_reader
 
 domain_checker = pydnsbl.DNSBLDomainChecker()
 
-def clean_date(date):
-    if isinstance(date, list):
-        return date[0]
-    return date
-
-def domain_who_is(address):
-    w = whois.whois(address)
-    w.text
-    print("[+] Domain:", w.get("domain_name"))
-    print("[+] Registrar:", w.get("registrar"))
-    print("[+] Registrar_URL:", w.get("registrar_url"))
-    print("[+] Registrant_Postal_Code:", w.get("registrant_postal_code"))
-    print("[+] Created On:", clean_date(w.get("creation_date")))
-    print("[+] Expiry On:", clean_date(w.get("expiration_date")))
-    print("[+] Updated On:", clean_date(w.get("updated_date")))
-    print("[+] Organization:", w.get("org"))
-    print("[+] Name:", w.get("name"))
-    print("[+] City:", w.get("city"))
-    print("[+] State:", w.get("state"))
-    print("[+] Country:", w.get("country"))
-    print("[+] Tech Name:", w.get("tech_name"))
-    print("[+] Tech Org:", w.get("tech_org"))
-    print("[+] Admin Name:", w.get("admin_name"))
-    print("[+] Admin Org:", w.get("admin_org"))
-    print("[+] Name Servers:", w.get("name_servers"))
-    print("[+] Emails:", w.get("emails"))
-    
-def domain_lookup():
-    address = input("Enter the Domain : ")
+def complete_scan():
+    domain = input("Enter domain: ")
 
     try:
-        ip = socket.gethostbyname(address)
-        print(f"\n[+] IP Addresses: {''.join(ip)}") 
-        domain_who_is(address)
+        ip = socket.gethostbyname(domain)
     except:
-        print("[-] Could not resolve domain")
-        exit()
+        print("[-] Domain resolve failed")
+        return
 
+    print("\n===== COMPLETE SCAN =====")
 
-def reverse_lookup():
-    ip_address = input("Enter the IP  : ")
+    whois_data = domain_who_is(domain)
 
     try:
-        hostname, _, _ = socket.gethostbyaddr(ip_address)
-        print(f"\n\n[+] IP Addresses: {ip_address}") 
-        print(f"[+] Reverse lookup : {hostname}")
-    except socket.herror:
-        print("Unknown Host")
-        exit()
+        ssl_data = get_ssl_info(domain)
+    except:
+        ssl_data = "SSL Error"
+  
+    result = domain_checker.check(domain)
+    blacklist_data = {
+        "blacklisted": result.blacklisted,
+        "detected_by": list(result.detected_by)
+    }
 
+    final_data = {
+        "domain": domain,
+        "ip": ip,
+        "whois": whois_data,
+        "ssl": ssl_data,
+        "blacklist": blacklist_data
+    }
 
-def DNS_blacklist_cheaker():
-    result = domain_checker.check('google.com')
+    print(f"\nDomain: {domain}")
+    print(f"IP: {ip}")
 
-    if result.blacklisted:
-        print(f"Domain is BLACKLISTED on {len(result.detected_by)} lists.")
-        print(f"Detected by: {result.detected_by}")
+    print("\n--- WHOIS ---")
+    for k, v in whois_data.items():
+        print(f"{k}: {v}")
+
+    print("\n--- SSL ---")
+    if isinstance(ssl_data, dict):
+        for k, v in ssl_data.items():
+            print(f"{k}: {v}")
     else:
-        print("Domain is clean.")
+        print(ssl_data)
 
+    print("\n--- BLACKLIST ---")
+    print(f"Blacklisted: {blacklist_data['blacklisted']}")
+    print(f"Detected by: {blacklist_data['detected_by']}")
+ 
+    print(report_generator(final_data))
+
+
+# ================= MAIN =================
 
 def main():
     while True:
-        print('\n\n1. Domain lookup')
+        print('\n1. Domain lookup')
         print('2. Reverse lookup')
         print('3. Domain Blacklist')
-        print('6. Exit')
-        choice = int(input("Choose : "))
+        print('4. SSL info')
+        print('5. Complete Scan')
+        print('6. View Reports')
+        print('7. Exit')
 
-        if choice == 1 :
+        try:
+            choice = int(input("Choose : "))
+        except:
+            print("Invalid input")
+            continue
+
+        if choice == 1:
             domain_lookup()
+
         elif choice == 2:
-            reverse_lookup()  
+            reverse_lookup()
+
         elif choice == 3:
-            DNS_blacklist_cheaker() 
+            DNS_blacklist_checker()
+
+        elif choice == 4:
+            hostname = input("Enter the domain : ")
+            info = get_ssl_info(hostname)
+
+            print("\n===== SSL INFO =====")
+            for k, v in info.items():
+                print(f"{k}: {v}")
+
+            print(report_generator(info))
+
+        elif choice == 5:
+            complete_scan()
+
         elif choice == 6:
-            break    
+            print(report_reader())
+
+        elif choice == 7:
+            break
         else:
-            print("Invalid Options.") 
+            print("Invalid Option.")
+
 
 if __name__ == "__main__":
     banner.banner()
     main()
-    
-
-
-
-
-      
-
-
-    
-    
