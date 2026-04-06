@@ -92,14 +92,17 @@ def main():
 
         elif choice == 4:
             hostname = input("Enter the domain : ")
-            info = get_ssl_info(hostname)
-
             print("\n===== SSL INFO =====")
-            for k, v in info.items():
-                print(f"{k}: {v}")
+            try:
+                info = get_ssl_info(hostname)
 
-            print(report_generator(info))
+                for k, v in info.items():
+                    print(f"{k}: {v}")
 
+                print(report_generator(info))
+            except:
+               print("[-] Domain resolve failed.")
+    
         elif choice == 5:
             complete_scan()
 
